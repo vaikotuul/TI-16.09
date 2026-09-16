@@ -43,15 +43,45 @@ hindamise osa.
 ## Etapp 3a — Ebamäärane optimeerimisprompt
 **Prompt:** `prompts/03_optimeerimine_ebamaarane.md` (esimene osa)
 **Mida agent omal algatusel pakkus:**
-**Kas haaras iseseisvalt alpha-beta järele?**
-**Kas pakkus ka move ordering'ut?**
-**Kas pakkus midagi muud (bitboardid, TT, sümmeetria)?**
+- Analüüsis otsingu aegluse põhjuseid ja pakkus välja viis peamist optimeerimissuunda, mis tagavad identse käiguvaliku:
+  1. Alpha-beta pügamine (pügab harud, mis ei saa lõpptulemust muuta).
+  2. Käikude järjestamine (move ordering: kasti sulgevad käigud ja ohutud käigud enne ohverdamisi), mis tõstab alpha-beta pügamise efektiivsust.
+  3. Transpositsioonitabel (olekute bitmask-vahemälu korduvate harude vältimiseks).
+  4. Laua sümmeetriate kanoniseerimine (D4 dihedraalne rühm: pöörded ja peegeldused).
+  5. Kiired bitboard-tehted (kastide valmimise kontroll eelarvutatud bitimaskidega ilma tsükliteta).
+**Kas haaras iseseisvalt alpha-beta järele?** Jah, esimese ja peamise meetodina, sest see säilitab 100% matemaatiliselt minimax tulemuse, vähendades puu suurust parimal juhul $O(b^d)$ tasemelt $O(b^{d/2})$ tasemele.
+**Kas pakkus ka move ordering'ut?** Jah, eraldi välja toodud, et alpha-beta saavutaks maksimaalse pügamisefekti (kasti sulgemised ja ohutud käigud esimesena).
+**Kas pakkus midagi muud (bitboardid, TT, sümmeetria)?** Jah, pakkus nii transpositsioonitabelit (TT), sümmeetriate kanoniseerimist (D4 rühm) kui ka bitboard-kiirendusi.
+
 
 ## Etapp 3b — Selge alpha-beta prompt
 **Prompt:** `prompts/03_optimeerimine_ebamaarane.md` (teine osa)
 **Mida agent tegi:**
+- Implementeeris `src/agents/alphabeta_agent.py` ja klassi `AlphaBetaAgent` depth-limited alpha-beta otsinguga.
+- Realiseeris matemaatiliselt korrektse lisakäigu akna nihke: kasti sulgemisel (`g > 0`) perspektiiv ei muutu ning otsinguakent nihutatakse vastavalt $\alpha' = \alpha - g$ ja $\beta' = \beta - g$; käigu üleminemisel vastasele (`g == 0`) pööratakse aken ümber: $\alpha' = -\beta$, $\beta' = -\alpha$. See lahendab mängu tüüpilise lisakäigu "piiride vea" (bounds error).
+- Lisas staatilise käikude järjestamise (`order_moves`):
+  1. Ohutud käigud (servad, mis ei sulge kasti ega tekita ühegi kasti 3. külge).
+  2. Kasti valmistavad käigud (`g > 0`).
+  3. Kõik muud käigud (käigud, mis loovad kasti 3. külje ja ohverdavad kasti vastasele).
+- Säilitas Etapp 2-ga täpselt samasuguse globaalse ja agendi-tasemel sõlmede loenduri (`node_counter`).
+- Kirjutas ühiktestid (`tests/test_alphabeta_agent.py`), kontrollides muuhulgas 5 fikseeritud keskmängu positsioonil sügavusel 6 käiguvaliku ja hinnangu 100% identsust Etapp 2 minimaxiga. Testikattuvus `alphabeta_agent.py` puhul 100%, kogu projektil 97%.
 **Mis läks katki / vajas parandust:**
+- Algne kahtlus oli, kas staatiline käikude järjestamine võib viigiseisude korral valida minimaxist teistsuguse käigu. Test 5 fikseeritud keskmängu positsioonil näitas, et nii hinnangud kui valitud käigud langesid 100% kokku, kinnitades piiride ja otsinguloogika veatut toimimist.
 **Sõlmede vähenemine (%):**
+- Mõõdetud 5 fikseeritud keskmängu positsiooni baasil:
+  - **Sügavusel 6:**
+    - Minimax: 773 665 sõlme / positsioon (kokku 3 868 325 sõlme, aeg ~22 s)
+    - Alpha-Beta: 7 374 sõlme / positsioon (kokku 36 871 sõlme, aeg 0.77 s)
+    - **Sõlmede vähenemine: 99.05%** (üle 100x kiirem).
+  - **Sügavusel 8:**
+    - Minimax: arvutuslikult teostamatu (~3.06 × 10^10 sõlme)
+    - Alpha-Beta: 47 238 sõlme / positsioon (kokku 236 190 sõlme, aeg 4.51 s)
+    - **Sõlmede vähenemine: > 99.999%**.
+  - **Sügavusel 10:**
+    - Minimax: arvutuslikult teostamatu (~7.35 × 10^12 sõlme)
+    - Alpha-Beta: 190 738 sõlme / positsioon (kokku 953 691 sõlme, aeg 16.30 s)
+    - **Sõlmede vähenemine: > 99.9999%**.
+
 
 ## Etapp 4 — Transpositsioonitabel
 **Prompt:** `prompts/04_transpositsioonitabel.md`
