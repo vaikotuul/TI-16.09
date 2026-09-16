@@ -121,8 +121,20 @@ hindamise osa.
 ## Etapp 5 — Sümmeetria
 **Prompt:** `prompts/05_summeetria.md`
 **Mida agent tegi:**
+- Implementeeris `src/agents/symmetry_agent.py` ja agendiklassi `SymmetryAgent`.
+- Arvutas ette kõik D4 dihedraalrühma permutatsioonitabelid: ruudukujulisel laual (rows == cols) 8 sümmeetriat (identiteet, 3 pööret, 4 peegeldust), ristkülikukujulisel laual 4 sümmeetriat (identiteet, flip H, flip V, rot 180). Tabelid arvutatakse üks kord (`@functools.lru_cache`) ja neid kasutatakse kõigis otsingutes.
+- Iga permutatsioon teisendab Etapp 1 servade indekseerimise põhjal edge_to_index ja index_to_edge abil, säilitades täpselt lepingus fikseeritud indekseerimisskeemi.
+- Enne iga transpositsioonitabeli päringut arvutatakse maski kanooniline vorm (leksikograafiliselt väiksim mask kõigi sümmeetriliste variantide seas) ja TT võtmena kasutatakse seda kanoonilist maski.
+- Kirjutas 5 ühiktesti (`tests/test_symmetry_agent.py`): permutatsioonitabelite bijektiivsus, kanoniseerimise korrektsus (pööratud ja peegeldatud positsioonid annavad sama kanoonilise maski), hindamise invariantsus (mõlemad hinnatakse võrdse väärtusega), Etapp 4 korrektsuse testid (käiguvalik jääb samaks) ja agendiklassi liides.
 **Mis läks katki / vajas parandust:**
+- Esialgsel tt_move kandidaatide edastamisel oli kanoniseerimise kontekstis oht edastada tt_move, mis viitab sümmeetrilisele käigule, mitte originaalse paigutuse käigule. Lahendati kontrollides `if c_mask == mask` enne tt_move edastamist.
+- Kanoniseerimine suurendab iga TT päringu arvestuslikku kulu: ~8 permutatsiooni rakendamine maskile. Benchmark näitas, et see on neto-positiivne ainult suuremate otsingusügavuste ja vähem külastatud positsioonide korral.
 **Vähenemistegur:**
+- Mõõdetud võrdlus Etapp 4 toore TT-ga:
+  - **2x2 täislahendamine (depth=12):** TT kirjete vähenemine **3.43x** (70.9% vähem kirjeid), sõlmede vähenemine **2.86x**.
+  - **3x3 tühi positsioon (depth=6):** TT kirjete vähenemine **2.26x** (55.8% vähem kirjeid), sõlmede vähenemine **2.12x**, kuid kanoniseerimisülekoulu tõttu nodes/s **vähenes** (41 477 → 24 241 sõlme/s) keskmängu positsioonidel.
+  - **Netomõju:** Kanoniseerimise ülekulu (8 permutatsiooni arvutamine massi kohta) muudab sümmeetria Pythoni implementatsioonis *netokahjuks* hästi pügitud alpha-beta keskmängu positsioonidel, kuid on kasulik tühja laua lähedal, kus positsioonide korduvus on suurem. Tühjal 3x3 laual sügavusel 6: **2.12x kiirem** (0.491 s → 0.200 s).
+
 
 ## Etapp 6 — Testid ja dokumentatsioon
 **Prompt:** `prompts/06_testid_ja_dokumentatsioon.md`
