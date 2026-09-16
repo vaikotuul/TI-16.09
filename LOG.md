@@ -86,8 +86,37 @@ hindamise osa.
 ## Etapp 4 — Transpositsioonitabel
 **Prompt:** `prompts/04_transpositsioonitabel.md`
 **Mida agent tegi:**
+- Implementeeris faili `src/agents/transposition_agent.py` ja agendiklassi `TranspositionAgent`.
+- Kasutas transpositsioonitabeli võtmena AINULT servade maski, tagades otsingufunktsiooni tulemuse väljendamise käigul oleva mängija suhtes (negamax konventsioon).
+- Implementeeris kaks transpositsioonitabeli varianti:
+  1. `FlatTranspositionTable` — lame massiiv (`bytearray`) otsese indekseerimisega ilma räsifunktsiooni ega kollisioonideta.
+  2. `DictTranspositionTable` — Pythoni sõnastikupõhine (`dict`) võrdlusversioon.
+- Salvestas standardse alpha-beta kirje formaadi: `(depth, flag, value, best_move)`, toetades lipukesi `FLAG_EXACT`, `FLAG_LOWERBOUND` ja `FLAG_UPPERBOUND`. Lisaks kasutatakse tabelisse salvestatud parimat käiku otsingu esimese proovitava käiguna (`tt_move`).
+- Realiseeris iteratiivse süvenemise (`choose_move_iterative_deepening`) kellaajapõhise eelarvega (vaikimisi 1.0 sekund), säilitades ja taaskasutades transpositsioonitabeli kirjeid järjest sügavamate iteratsioonide vahel.
+- Kirjutas 7 ühiktesti (`tests/test_transposition_agent.py`), saavutades `transposition_agent.py` testikattuvuseks 99%.
 **Mis läks katki / vajas parandust:**
+- Iteratiivse süvenemise ajapiirangu kontrollimisel tuli tagada, et kui viimane iteratsioon ületab ajalimiidi, ei tagastataks pooleli jäänud ebausaldusväärset käiku, vaid eelmise täielikult lõpetatud sügavuse parim käik.
 **Mõõdetud: aeg, tipp-mälu, tabeli suurus:**
+- **Lameda massiivi (Flat TT) teoreetiline ja tegelik suurus:**
+  - 1 baiti kirje kohta (teoreetiline lahendatud väärtuse tabel):
+    - 2x2 laud: $2^{12}$ baiti = 4 096 B = **0.0039 MiB** (0.0041 MB)
+    - 3x3 laud: $2^{24}$ baiti = 16 777 216 B = **16.0000 MiB** (16.78 MB)
+  - 4 baiti kirje kohta (`depth, flag, val, move`):
+    - 2x2 laud: 16 384 B = **0.0156 MiB** (16 KB)
+    - 3x3 laud: 67 108 864 B = **64.0000 MiB** (64 MB)
+- **2x2 laua ammendav lahendamine (depth = 12, ammendav lõpplahendus):**
+  - Optimaalne väärtus: +2 (Player 1 võidab 3 kasti 1 vastu), avakäik = 0.
+  - Sõlmi kokku: 7 670
+  - **Flat TT:** aeg = **1.01 s**, tipp-mälu (`tracemalloc`) = **19.5 KB**
+  - **Dict TT:** aeg = **1.09 s**, tipp-mälu (`tracemalloc`) = **249.0 KB** (1 614 kirjet)
+  - Lame massiiv saavutas üle 12x väiksema tipp-mälukasutuse ja oli kiirem.
+- **3x3 laua lahendamise katse ja iteratiivne süvenemine:**
+  - Täielik ammendav lahendamine 5 minuti jooksul ei lõpe (24 serva olekuruum ilma sümmeetriata nõuab miljardeid haruhindamisi).
+  - Iteratiivse süvenemise saavutatud sügavused tühjal 3x3 laual:
+    - **1 s eelarve:** saavutatud sügavus **6**, 83 750 sõlme, 4 652 TT kirjet (aeg 1.91 s)
+    - **10 s eelarve:** saavutatud sügavus **9**, 741 766 sõlme, 53 026 TT kirjet (aeg 17.91 s)
+    - **60 s eelarve:** saavutatud sügavus **12**, 4 301 471 sõlme, 354 801 TT kirjet (aeg 105.06 s)
+
 
 ## Etapp 5 — Sümmeetria
 **Prompt:** `prompts/05_summeetria.md`
