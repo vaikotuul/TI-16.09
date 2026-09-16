@@ -68,10 +68,12 @@ def print_status(state: GameState) -> None:
     print("=" * 32)
 
 
-def run_game(rows: int = 3, cols: int = 3, human_player: int = 1) -> None:
-    """Run full interactive game between human and random agent."""
+def run_game(rows: int = 3, cols: int = 3, human_player: int = 1, agent=None) -> None:
+    """Run full interactive game between human and agent."""
     state = GameState(rows=rows, cols=cols)
-    agent = RandomAgent()
+    if agent is None:
+        agent = RandomAgent()
+
 
     print(f"\nStarting Dots & Boxes ({rows}x{cols} boxes).")
     print(f"You are Player {human_player}. Agent is Player {3 - human_player}.")

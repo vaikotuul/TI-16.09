@@ -25,7 +25,9 @@ if edge `i` has been drawn, and 0 otherwise. Total edges: `h_count + v_count`.
 This indexing contract is fixed and immutable across all development stages.
 """
 
+import functools
 from typing import Dict, List, Optional, Tuple
+
 
 
 def num_horizontal_edges(rows: int, cols: int) -> int:
@@ -70,6 +72,7 @@ def index_to_edge(index: int, rows: int, cols: int) -> Tuple[str, int, int]:
     return "V", idx_v // (cols + 1), idx_v % (cols + 1)
 
 
+@functools.lru_cache(maxsize=None)
 def box_edges(r: int, c: int, rows: int, cols: int) -> Tuple[int, int, int, int]:
     """Return the 4 edge indices (top, bottom, left, right) of box (r, c)."""
     if not (0 <= r < rows and 0 <= c < cols):
@@ -81,7 +84,9 @@ def box_edges(r: int, c: int, rows: int, cols: int) -> Tuple[int, int, int, int]
     return top, bottom, left, right
 
 
+@functools.lru_cache(maxsize=None)
 def edge_boxes(edge_index: int, rows: int, cols: int) -> List[Tuple[int, int]]:
+
     """Return list of box coordinates (r, c) adjacent to the given edge."""
     edge_type, r, c = index_to_edge(edge_index, rows, cols)
     boxes = []

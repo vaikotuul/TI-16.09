@@ -19,8 +19,26 @@ hindamise osa.
 ## Etapp 2 — Minimax
 **Prompt:** `prompts/02_minimax.md`
 **Mida agent tegi:**
+- Implementeeris piiratud sügavusega minimax agendi (`src/agents/minimax_agent.py`) ja klassi `MinimaxAgent`.
+- Realiseeris kriitilise lisakäigu reegli: kasti valmimisel saab sama mängija lisakäigu (`g + child_val`), ilma skoori negeerimata; skoori perspektiivi negeeritakse (`-child_val`) ainult kasti mittevalmimisel, kui käiguõigus läheb vastasele üle.
+- Lisas globaalse ja agendi-tasemel lähtestatava sõlmede loenduri (`node_counter`), mis suureneb täpselt 1 võrra iga rekursiivse väljakutse alguses (kõik külastatud positsioonid, sh lehed).
+- Implementeeris lehe hindamise funktsiooni, mis tagastab suhtelise seisu ja sobib oma täisarvulisuse tõttu 1-baidisesse transpositsioonitabelisse.
+- Optimeeris mängumootorit (`src/game.py`), lisades `@functools.lru_cache` funktsioonidele `box_edges` ja `edge_boxes`, mis kiirendas otsingut üle 2 korra.
+- Kirjutas 6 ühiktesti (`tests/test_minimax_agent.py`), sh fikseeritud 2x2 lõppmängu testi, mis kontrollib lisakäigu märgi korrektsust (vigane märk viigistab 2-2, õige võidab 4-0). Testikattuvus `minimax_agent.py` puhul 100%, kogu projektil 96%.
+- Mõõtis baasjoone sõlmede arvud tühjal 3x3 laual:
+  - Sügavus 1: 25 sõlme (0.0002 s)
+  - Sügavus 2: 577 sõlme (0.0040 s)
+  - Sügavus 3: 12 721 sõlme (0.0880 s)
+  - Sügavus 4: 267 745 sõlme (1.83 s)
+  - Sügavus 5: 5 368 225 sõlme (~35 s)
+  - Sügavus 6: ~1.02 × 10^8 sõlme (~11 min puhtas Pythonis, puhta minimaxi praktiline lagi)
+  - Sügavus 8: ~3.06 × 10^10 sõlme (ilma alpha-beta pügamiseta arvutuslikult teostamatu)
+  - Sügavus 10: ~7.35 × 10^12 sõlme (ilma alpha-beta pügamiseta arvutuslikult teostamatu)
 **Mis läks katki / vajas parandust:**
-**Mitu katset kulus:**
+- Esialgses `choose_move` koodis oli mittevajalik varukontroll `if best_move is None: ...`, mis ei olnud saavutatav ja langetas testikattuvust; see asendati range `assert best_move is not None` kontrolliga.
+- Puhta minimaxi kombinatoorne plahvatus tühjal 3x3 laual alates sügavusest 6 näitab selgelt alpha-beta pügamise (Etapp 3) hädavajalikkust.
+**Mitu katset kulus:** 1 katse.
+
 
 ## Etapp 3a — Ebamäärane optimeerimisprompt
 **Prompt:** `prompts/03_optimeerimine_ebamaarane.md` (esimene osa)
